@@ -618,15 +618,23 @@ where
                     }
                 };
 
-                if !drop {
-                    let event = original_event.expect("event will be set");
-
-                    push_default(event, output, &self.default_schema_definition);
-                } else if self.reroute_dropped {
-                    let mut event = original_event.expect("event will be set");
-
-                    self.annotate_dropped(&mut event, reason, error);
-                    push_dropped(event, output, &self.dropped_schema_definition);
+                if let Some(mut event) = original_event {
+                    if !drop {
+                        push_default(event, output, &self.default_schema_definition);
+                    } else if self.reroute_dropped {
+                        self.annotate_dropped(&mut event, reason, error);
+                        push_dropped(event, output, &self.dropped_schema_definition);
+                    }
+                } else if !drop || self.reroute_dropped {
+                    // We shouldn't be able to get here: the original event should have been
+                    // cloned if the program could error and we didn't want to drop it
+                    warn!(
+                        "Unexpected VRL error encountered: event has been dropped. program_is_falible={}, program_is_abortable={}, drop={}, reroute_dropped={}",
+                        self.program.info().fallible,
+                        self.program.info().abortable,
+                        drop,
+                        self.reroute_dropped
+                    );
                 }
             }
         }
