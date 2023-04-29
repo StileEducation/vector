@@ -579,6 +579,8 @@ where
             None
         };
 
+        let event_copy_for_debugging = event.clone();
+
         let mut target = VrlTarget::new(
             event,
             self.program.info(),
@@ -629,11 +631,12 @@ where
                     // We shouldn't be able to get here: the original event should have been
                     // cloned if the program could error and we didn't want to drop it
                     warn!(
-                        "Unexpected VRL error encountered: event has been dropped. program_is_falible={}, program_is_abortable={}, drop={}, reroute_dropped={}",
+                        "Unexpected VRL error encountered: event has been dropped. program_is_falible={}, program_is_abortable={}, drop={}, reroute_dropped={}, event={:?}",
                         self.program.info().fallible,
                         self.program.info().abortable,
                         drop,
-                        self.reroute_dropped
+                        self.reroute_dropped,
+                        event_copy_for_debugging
                     );
                 }
             }
